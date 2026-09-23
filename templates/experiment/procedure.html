@@ -1,0 +1,15 @@
+{% extends 'experiment/base.html' %}
+{% block title %}Procedure - Serving Static Files in Django | Virtual Labs{% endblock %}
+{% block nav_procedure %}current-item{% endblock %}
+{% block content %}
+<div class="text-center fix-spacing">
+  <h2 id="procedure">Procedure</h2>
+</div>
+<p>Follow these steps to serve static files in Django. The same steps are interactive in <strong>Simulation</strong>.</p>
+<ol>
+<li><strong>Create static folders</strong> — Inside project root, create <code>static/css/</code>, <code>static/js/</code>, <code>static/images/</code> and place your files there, e.g., <code>static/css/style.css</code>.<br><code>project/ ├── manage.py ├── static/ │ ├── css/style.css │ └── images/logo.png</code></li>
+<li><strong>Configure settings.py</strong> — Add at the bottom of <code>settings.py</code>:<br><code>STATIC_URL = '/static/'</code><br><code>STATICFILES_DIRS = [BASE_DIR / 'static']</code> — <em>Try this in Simulation → Step 1</em></li>
+<li><strong>Load static in template</strong> — At the very top of your HTML template, add:<br><code>{% templatetag openblock %} load static {% templatetag closeblock %}</code><br><code>&lt;link rel="stylesheet" href="{% templatetag openblock %} static 'css/style.css' {% templatetag closeblock %}"&gt;</code></li>
+<li><strong>Run and Verify</strong> — Run <code>python manage.py runserver</code> and open <code>http://127.0.0.1:8000/</code>. If configured correctly, CSS will apply and images will load (HTTP 200). If not, console shows 404. For production, run <code>collectstatic</code>.</li>
+</ol>
+{% endblock %}

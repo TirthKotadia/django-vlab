@@ -1,0 +1,16 @@
+{% extends 'experiment/base.html' %}
+{% block title %}Aim - Serving Static Files in Django | Virtual Labs{% endblock %}
+{% block nav_aim %}current-item{% endblock %}
+{% block content %}
+<div class="text-center fix-spacing">
+  <h2 id="serving-static-files-in-django">Serving Static Files in Django</h2>
+</div>
+<p>This experiment is designed to demonstrate serving of static files in Django in a full-stack development setting. It offers an interactive platform where users can observe and analyze how CSS, JavaScript and Images are resolved and served at each configuration step within the Django framework.</p>
+<h2 id="objectives">Objectives:</h2>
+<ul>
+<li><strong>Interactive Static File Visualization:</strong> Enable users to visually track how static file paths are resolved at each configuration step — from broken (404) to correctly served (200 OK).</li>
+<li><strong>Customizable Django Configuration:</strong> Allow users to modify the Django static files configuration, facilitating a deeper understanding of how static file adaptation occurs under different conditions.</li>
+<li><strong>Demonstrate Correct Serving:</strong> Clearly illustrate the process of correct static serving, showing how iterative configuration refinement in <code>settings.py</code> and templates leads to optimal resource delivery in the Django application.</li>
+</ul>
+<p>The experiment is tailored for learners interested in full stack development and web frameworks, providing an engaging and educational exploration of static file handling in a controlled, yet dynamic environment.</p>
+{% endblock %}

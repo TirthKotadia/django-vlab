@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="experiment-short-name" content="serving-static-files">
+    <meta name="developer-institute" content="IIITH">
+    <meta name="learning-unit" content="SERVING STATIC FILES IN DJANGO">
+    <title>{% block title %}Virtual Labs - Serving Static Files in Django{% endblock %}</title>
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css" integrity="sha512-Oy18vBnbSJkXTndr2n6lDMO5NN31UljR8e/ICzVPrGpSud4Gkckb8yUpqhKuUNoE+o9gAb4O/rAxxw1ojyUVzg==" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Raleway&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/github-markdown.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/vlabs-style-exact.css' %}">
+    <link rel="stylesheet" href="{% static 'css/toast.css' %}">
+    <style>
+      h1 { font-size: 1.8rem; }
+      h2 { font-size: 1.4rem; }
+      h3 { font-size: 1.2rem; }
+      h2, h3 { font-weight: 800; }
+      .sim-card { border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; background:white; margin-bottom:14px; }
+      .sim-card-header { background:#f8fafc; padding:8px 12px; font-size:12.5px; font-weight:700; color:#3e6389; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; }
+      .code-editor { background:#0f172a; border-radius:6px; padding:11px 12px; font-family:'Consolas',monospace; font-size:11.5px; line-height:1.65; color:#e2e8f0; min-height:88px; border:1px solid #1e293b; }
+      .code-line-missing { color:#64748b; font-style:italic; }
+      .code-line-added { color:#4ade80; font-weight:600; }
+      .file-tab { background:#1e293b; color:#94a3b8; padding:4px 9px; font-size:11px; border-radius:4px 4px 0 0; display:inline-block; margin-bottom:-1px; border:1px solid #334155; border-bottom:none; }
+      .preview-window { border:1px solid #cbd5e1; border-radius:6px; overflow:hidden; background:white; }
+      .preview-topbar { background:#f1f5f9; padding:6px 9px; display:flex; align-items:center; gap:6px; border-bottom:1px solid #e2e8f0; }
+      .dot { width:10px; height:10px; border-radius:50%; }
+      .dot.red{background:#ef4444;} .dot.yellow{background:#f59e0b;} .dot.green{background:#22c55e;}
+      .preview-url { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:2px 9px; font-size:11px; color:#64748b; margin-left:8px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .preview-content { padding:16px; min-height:178px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+      .preview-content.broken { background:#fef2f2; }
+      .preview-content.fixed { background:#f0fdf4; }
+      .status-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:700; }
+      .status-badge.error { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
+      .status-badge.success { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+      .step-badge { background:#3e6389; color:white; width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; margin-right:6px; }
+      .step-badge.done { background:#16a34a; }
+      .logo-placeholder-exact {
+        width: 180px;
+        height: 48px;
+        border: 2px dashed #3e6389;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3e6389;
+        font-size: 11px;
+        font-weight: 700;
+        background: #f8fafc;
+        border-radius: 4px;
+        margin-left: 8px;
+      }
+      .vlabs-page-content { font-family:"Raleway",sans-serif; }
+      .markdown-body code, .markdown-body pre code, .markdown-body pre, code {
+        color: #000 !important;
+        background-color: #f6f8fa !important;
+        border: 1px solid #e1e4e8 !important;
+      }
+      .markdown-body a code { color: #000 !important; }
+      .markdown-body li, .markdown-body p, .markdown-body ol li { color: #000 !important; }
+    </style>
+</head>
+<body class="p-0 container-fluid vlabs-page d-flex flex-column justify-content-between">
+      <header class="vlabs-header sticky-top bg-white">
+        <nav class="p-0 navbar navbar-light d-flex align-items-stretch">
+          <button class="navbar-toggler px-4" type="button" onclick="document.getElementById('popupMenu').classList.toggle('show');document.getElementById('popupMenu').style.display=document.getElementById('popupMenu').style.display==='block'?'none':'block'">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="d-flex justify-content-center">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" style="height:48px; width:auto;">
+          </div>
+          <div id="headerNavbar" class="d-none border-top flex-grow-1 d-lg-flex align-items-center justify-content-end">
+            <div class="d-flex align-items-center" style="margin-right:20px; font-size:14px; color:#3e6389;">
+              <span style="color:#ffcc00; font-size:18px; letter-spacing:1px; margin-right:10px;">★★★★☆</span>
+            </div>
+            <a href="#" style="border:none; color:#fff; background-color:#288ec8; text-align:center; font-size:1.05rem; border-radius:1em; padding:0.6em 1.2em; margin:0 6px; text-decoration:none; display:inline-block;">Rate Me</a>
+            <a href="#" style="border:none; color:#fff; background-color:#288ec8; text-align:center; font-size:1.05rem; border-radius:1em; padding:0.6em 1.2em; margin:0 10px; text-decoration:none; display:inline-block;">Report a Bug</a>
+          </div>
+        </nav>
+      </header>
+      <div class="container-fluid flex-fill d-flex flex-column vlabs-page-main">
+        <div class="row d-flex justify-content-between">
+          <div class="flex-column">
+            <div class="row py-4 px-4 breadcrumbs">
+              <a href="/">Computer Science and Engineering</a>
+              <span class="mx-2"><i aria-hidden="true" class="fa fa-angle-right"></i></span>
+              <a href="/">Full Stack Development</a>
+              <span class="mx-2"><i aria-hidden="true" class="fa fa-angle-right"></i></span>
+              <a href="/">Experiments</a>
+            </div>
+          </div>
+        </div>
+        <div class="row flex-grow-1 d-flex flex-nowrap flex-column flex-lg-row">
+          <div class="modal fade popupmenu" id="popupMenu" tabindex="-1" style="display:none; background:rgba(0,0,0,0.5); position:fixed; inset:0; z-index:1050; overflow:auto;">
+              <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="margin:1.75rem auto; max-width:500px;">
+                  <div class="modal-content" style="background:white; border-radius:8px;">
+                      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #e8e8e8;">
+                          <h5 class="modal-title"><img src="{% static 'images/logo.png' %}" alt="Logo" style="height:36px; width:auto;"></h5>
+                          <button type="button" class="btn-close" onclick="document.getElementById('popupMenu').style.display='none'"></button>
+                      </div>
+                      <div class="modal-body nav-menu" style="padding:16px;">
+                              <div><div class="d-flex nav-menu-body"><a href="/" class="p-2 {% if request.path == '/' %}current-item{% endif %}">Aim</a></div></div>
+                              <div><div class="d-flex nav-menu-body"><a href="/theory/" class="p-2 {% if request.path == '/theory/' %}current-item{% endif %}">Theory</a></div></div>
+                              <div><div class="d-flex nav-menu-body"><a href="/procedure/" class="p-2 {% if request.path == '/procedure/' %}current-item{% endif %}">Procedure</a></div></div>
+                              <div><div class="d-flex nav-menu-body"><a href="/pretest/" class="p-2 {% if request.path == '/pretest/' %}current-item{% endif %}">Pretest</a></div></div>
+                              <div><div class="d-flex nav-menu-body"><a href="/simulation/" class="p-2 {% if request.path == '/simulation/' %}current-item{% endif %}">Simulation</a></div></div>
+                              <div><div class="d-flex nav-menu-body"><a href="/posttest/" class="p-2 {% if request.path == '/posttest/' %}current-item{% endif %}">Posttest</a></div></div>
+                              <div><div class="d-flex nav-menu-body"><a href="/references/" class="p-2 {% if request.path == '/references/' %}current-item{% endif %}">References</a></div></div>
+                              <div><div class="d-flex nav-menu-body"><a href="/contributors/" class="p-2 {% if request.path == '/contributors/' %}current-item{% endif %}">Contributors</a></div></div>
+                              <div><div class="d-flex nav-menu-body"><a href="/feedback/" class="p-2 {% if request.path == '/feedback/' %}current-item{% endif %}">Feedback</a></div></div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="nav flex-column sidebar nav-menu flex-shrink-0 px-lg-4 align-items-center align-items-lg-start hidden d-none d-lg-flex" id="menu" style="width:220px;">
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="/" class="p-2 {% block nav_aim %}{% endblock %}">Aim</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="/theory/" class="p-2 {% block nav_theory %}{% endblock %}">Theory</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="/procedure/" class="p-2 {% block nav_procedure %}{% endblock %}">Procedure</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="/pretest/" class="p-2 {% block nav_pretest %}{% endblock %}">Pretest</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="/simulation/" class="p-2 {% block nav_simulation %}{% endblock %}">Simulation</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="/posttest/" class="p-2 {% block nav_posttest %}{% endblock %}">Posttest</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="/references/" class="p-2 {% block nav_references %}{% endblock %}">References</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="/contributors/" class="p-2 {% block nav_contributors %}{% endblock %}">Contributors</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="/feedback/" class="p-2 {% block nav_feedback %}{% endblock %}">Feedback</a>
+                    </div>
+                </div>
+          </div>
+          <div class="vlabs-page-content px-5 pb-4 flex-grow-1 markdown-body">
+            {% block content %}{% endblock %}
+          </div>
+        </div>
+      </div>
+      <footer class="text-light pt-2 vlabs-footer d-flex flex-column">
+        <div class="row px-5 mx-0">
+          <div class="col d-flex flex-column">
+            <span class="font-weight-bold vlabs-footer-sect-name pb-2 mb-3">Community Links</span>
+            <a href="https://www.sakshat.ac.in/" class="text-light">Sakshat Portal</a>
+            <a href="http://outreach.vlabs.ac.in/" class="text-light">Outreach Portal</a>
+            <a href="https://vlab.co.in/faq" class="text-light">FAQ: Virtual Labs</a>
+          </div>
+          <div class="col d-flex flex-column">
+            <span class="font-weight-bold vlabs-footer-sect-name pb-2 mb-3">Contact Us</span>
+            <span> Phone: General Information: 011-26582050 </span>
+            <span> Email: support@vlabs.ac.in </span>
+          </div>
+          <div class="col d-flex flex-column">
+            <span class="font-weight-bold vlabs-footer-sect-name pb-2 mb-3">Follow Us</span>
+            <div class="social-links">
+              <a class="p-2 mt-1 mr-2 d-inline-flex justify-content-center align-items-center" style="background: #e52d27;" href="https://www.youtube.com/watch?v=asxRaOgk6a0"><i class="fab fa-youtube"></i></a>
+              <a class="p-2 mt-1 mr-2 d-inline-flex justify-content-center align-items-center" style="background: #2867B2;" href="https://in.linkedin.com/in/virtual-labs-008ba9136"><i class="fab fa-linkedin"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="m-0 py-2 text-center" style="font-family: &quot;Open Sans&quot;, sans-serif; background: #212121;">
+          <a class="text-primary font-weight-bold" href="https://www.gnu.org/licenses/agpl-3.0.en.html"> AGPL 3.0 </a>
+          &nbsp;&amp;&nbsp;
+          <a class="text-primary font-weight-bold" href="https://creativecommons.org/licenses/by-nc-sa/4.0/"> Creative Commons (CC BY-NC-SA 4.0) </a>
+        </div>
+      </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      function toggle() {
+        var el = document.getElementById('popupMenu');
+        if (el.style.display === 'block') el.style.display = 'none';
+        else el.style.display = 'block';
+      }
+    </script>
+</body>
+</html>

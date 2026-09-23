@@ -1,0 +1,85 @@
+{% extends 'experiment/base.html' %}
+{% block title %}Pretest - Serving Static Files in Django | Virtual Labs{% endblock %}
+{% block nav_pretest %}current-item{% endblock %}
+{% block content %}
+<div class="text-center fix-spacing">
+  <h2 id="pretest">Pretest</h2>
+</div>
+
+<div id="quiz">
+  <div class="question">
+    1. What is the purpose of STATIC_URL in Django?
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question0" value="a"> To store user uploaded files</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question0" value="b"> To define URL prefix for serving static files</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question0" value="c"> To connect to database</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question0" value="d"> To define admin URL</label>
+  </div>
+
+  <div class="question">
+    2. Which template tag is required at the top of every template that uses static files?
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question1" value="a"> {% templatetag openblock %} load media {% templatetag closeblock %}</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question1" value="b"> {% templatetag openblock %} load css {% templatetag closeblock %}</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question1" value="c"> {% templatetag openblock %} load static {% templatetag closeblock %}</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question1" value="d"> {% templatetag openblock %} load files {% templatetag closeblock %}</label>
+  </div>
+
+  <div class="question">
+    3. Where should you place your CSS/JS/Images for development?
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question2" value="a"> In a folder listed in STATICFILES_DIRS (e.g., /static/)</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question2" value="b"> In templates folder</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question2" value="c"> In migrations folder</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question2" value="d"> Anywhere, Django finds automatically</label>
+  </div>
+
+  <div class="question">
+    4. What happens if you write &lt;img src="logo.png"&gt; without {% templatetag openblock %} static {% templatetag closeblock %} tag?
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question3" value="a"> Image will load correctly</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question3" value="b"> Browser shows 404 Not Found</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question3" value="c"> Django will auto-correct it</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question3" value="d"> Server will crash</label>
+  </div>
+
+  <div class="question">
+    5. Which command is used to collect static files for production?
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question4" value="a"> python manage.py runserver</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question4" value="b"> python manage.py migrate</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question4" value="c"> python manage.py startapp</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question4" value="d"> python manage.py collectstatic</label>
+  </div>
+</div>
+
+<button id="submit" class="btn btn-primary">Submit Quiz</button>
+<div id="results" style="margin-top:14px; color:#000; font-weight:600;"></div>
+
+<script>
+const myQuestions = [
+  {correctAnswer:"b"},
+  {correctAnswer:"c"},
+  {correctAnswer:"a"},
+  {correctAnswer:"b"},
+  {correctAnswer:"d"}
+];
+document.getElementById('submit').addEventListener('click', function(){
+  const answerContainers = document.querySelectorAll('.answers');
+  let numCorrect = 0;
+  myQuestions.forEach((currentQuestion, questionNumber)=>{
+    const answerContainer = answerContainers[questionNumber];
+    const selector = `input[name=question${questionNumber}]:checked`;
+    const userAnswer = (answerContainer.querySelector(selector) || {}).value;
+    if(userAnswer === currentQuestion.correctAnswer){ numCorrect++; }
+  });
+  document.getElementById('results').innerHTML = `Score: ${numCorrect} out of ${myQuestions.length}`;
+  document.getElementById('results').style.color = "#000";
+});
+</script>
+{% endblock %}

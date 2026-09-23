@@ -1,0 +1,85 @@
+{% extends 'experiment/base.html' %}
+{% block title %}Posttest - Serving Static Files in Django | Virtual Labs{% endblock %}
+{% block nav_posttest %}current-item{% endblock %}
+{% block content %}
+<div class="text-center fix-spacing">
+  <h2 id="posttest">Posttest</h2>
+</div>
+
+<div id="quiz">
+  <div class="question">
+    1. In settings.py, STATICFILES_DIRS should point to:
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question0" value="a"> [BASE_DIR / 'static'] - your local static folder</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question0" value="b"> /tmp/static</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question0" value="c"> STATIC_ROOT only</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question0" value="d"> DATABASES setting</label>
+  </div>
+
+  <div class="question">
+    2. Correct way to link CSS in Django template is:
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question1" value="a"> &lt;link href="/css/style.css"&gt;</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question1" value="b"> &lt;link href="static/style.css"&gt;</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question1" value="c"> &lt;link href="{% templatetag openblock %} static 'css/style.css' {% templatetag closeblock %}"&gt;</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question1" value="d"> &lt;link href="{{STATIC_URL}}"&gt;</label>
+  </div>
+
+  <div class="question">
+    3. If DEBUG=False in production, Django will:
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question2" value="a"> Still serve static files automatically</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question2" value="b"> NOT serve static files - need collectstatic + WhiteNoise/Nginx</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question2" value="c"> Delete static files</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question2" value="d"> Move them to templates</label>
+  </div>
+
+  <div class="question">
+    4. What does {% templatetag openblock %} static 'images/logo.png' {% templatetag closeblock %} output if STATIC_URL='/static/'?
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question3" value="a"> images/logo.png</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question3" value="b"> /images/logo.png</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question3" value="c"> http://logo.png</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question3" value="d"> /static/images/logo.png</label>
+  </div>
+
+  <div class="question">
+    5. After completing both Simulation steps, the preview showed:
+  </div>
+  <div class="answers">
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question4" value="a"> Styled page with image loaded (200)</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question4" value="b"> Still broken page</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question4" value="c"> 500 Server Error</label>
+    <label style="display:block; font-weight:400; margin:6px 0;"><input type="radio" name="question4" value="d"> Blank page</label>
+  </div>
+</div>
+
+<button id="submit" class="btn btn-primary">Submit Quiz</button>
+<div id="results" style="margin-top:14px; color:#000; font-weight:600;"></div>
+
+<script>
+const myQuestions = [
+  {correctAnswer:"a"},
+  {correctAnswer:"c"},
+  {correctAnswer:"b"},
+  {correctAnswer:"d"},
+  {correctAnswer:"a"}
+];
+document.getElementById('submit').addEventListener('click', function(){
+  const answerContainers = document.querySelectorAll('.answers');
+  let numCorrect = 0;
+  myQuestions.forEach((currentQuestion, questionNumber)=>{
+    const answerContainer = answerContainers[questionNumber];
+    const selector = `input[name=question${questionNumber}]:checked`;
+    const userAnswer = (answerContainer.querySelector(selector) || {}).value;
+    if(userAnswer === currentQuestion.correctAnswer){ numCorrect++; }
+  });
+  document.getElementById('results').innerHTML = `Score: ${numCorrect} out of ${myQuestions.length}`;
+  document.getElementById('results').style.color = "#000";
+});
+</script>
+{% endblock %}

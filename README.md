@@ -1,0 +1,1 @@
+# VLab Experiment - Serving Static Files in Django

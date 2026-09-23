@@ -1,0 +1,29 @@
+{% extends 'experiment/base.html' %}
+{% block title %}Theory - Serving Static Files in Django | Virtual Labs{% endblock %}
+{% block nav_theory %}current-item{% endblock %}
+{% block content %}
+<div class="text-center fix-spacing">
+  <h2 id="theory">Theory</h2>
+</div>
+<p><strong>Static files</strong> in Django are files that do not change dynamically per request — CSS, JavaScript, Images, Fonts. They are different from <strong>Media files</strong> which are user-uploaded (e.g., profile pictures).</p>
+<p>Unlike plain HTML where you write <code>&lt;link href="style.css"&gt;</code>, Django <strong>does not serve static files automatically</strong>. You must explicitly configure where they are stored and how to link them. The browser request <code>/static/css/style.css</code> is only resolved if <code>STATIC_URL</code> and template tags are correct.</p>
+<h2 id="key-configuration">Key Configuration</h2>
+<p><strong>1. settings.py</strong></p>
+<pre style="background:#f6f8fa; padding:14px; border-radius:6px; font-size:13px; border:1px solid #e1e4e8;"><code># vlab_project/settings.py
+STATIC_URL = '/static/' # URL prefix for browser
+STATICFILES_DIRS = [BASE_DIR / 'static'] # where Django searches
+STATIC_ROOT = BASE_DIR / 'staticfiles' # for collectstatic</code></pre>
+<p><strong>2. Template Tags</strong> — every template that uses static must load the library:</p>
+<pre style="background:#f6f8fa; padding:14px; border-radius:6px; font-size:13px; border:1px solid #e1e4e8;"><code>&lt;!-- top of template.html --&gt;
+{% templatetag openblock %} load static {% templatetag closeblock %}
+
+&lt;!-- use static tag --&gt;
+&lt;link rel="stylesheet" href="{% templatetag openblock %} static 'css/style.css' {% templatetag closeblock %}"&gt;
+&lt;img src="{% templatetag openblock %} static 'images/logo.png' {% templatetag closeblock %}"&gt;</code></pre>
+<p><code>{% templatetag openblock %} static 'css/style.css' {% templatetag closeblock %}</code> is replaced at runtime with <code>/static/css/style.css</code> using the value of <code>STATIC_URL</code>. If either side is misconfigured, the browser shows <strong>404 Not Found</strong>.</p>
+<h3 id="development-vs-production">Development vs Production</h3>
+<ul>
+<li><strong>Development:</strong> <code>python manage.py runserver</code> automatically serves files from <code>STATICFILES_DIRS</code> when <code>DEBUG=True</code>.</li>
+<li><strong>Production:</strong> Run <code>python manage.py collectstatic</code> to collect all static files into <code>STATIC_ROOT</code>, then serve via Nginx or WhiteNoise.</li>
+</ul>
+{% endblock %}
