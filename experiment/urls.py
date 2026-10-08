@@ -10,6 +10,4 @@ urlpatterns = [
     path('references/', views.references, name='references'),
     path('contributors/', views.contributors, name='contributors'),
     path('feedback/', views.feedback, name='feedback'),
-    path('demo/', views.simulation, name='demo_old'),
-    path('practice/', views.simulation, name='practice_old'),
 ]

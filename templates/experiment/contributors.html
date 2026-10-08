@@ -1,8 +1,44 @@
 {% extends 'experiment/base.html' %}
 {% block title %}Contributors - Serving Static Files in Django | Virtual Labs{% endblock %}
-{% block nav_contributors %}current-item{% endblock %}
 {% block content %}
 <div class="text-center fix-spacing">
   <h2 id="contributors">Contributors</h2>
 </div>
+<table class="table table-bordered contributors-table" style="font-size:14px; background:white; width:100%; margin:0;">
+  <colgroup><col style="width:6%;"><col style="width:27%;"><col style="width:67%;"></colgroup>
+  <thead class="thead-light">
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Role</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Tirth Kotadia</td>
+      <td>Experiment design, simulation (settings.py + template steps), quizzes</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Azlaan Khan</td>
+      <td>Experiment design, simulation (settings.py + template steps), quizzes</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Soha Khare</td>
+      <td>Experiment design, simulation (settings.py + template steps), quizzes</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Sweekriti Maheshwari</td>
+      <td>Experiment design, simulation (settings.py + template steps), quizzes</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Prof. Abhijeet Pasi</td>
+      <td>Review, pedagogy alignment with Virtual Labs guidelines</td>
+    </tr>
+  </tbody>
+</table>
 {% endblock %}

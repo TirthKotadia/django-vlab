@@ -1,6 +1,5 @@
 {% extends 'experiment/base.html' %}
 {% block title %}Posttest - Serving Static Files in Django | Virtual Labs{% endblock %}
-{% block nav_posttest %}current-item{% endblock %}
 {% block content %}
 <div class="text-center fix-spacing">
   <h2 id="posttest">Posttest</h2>
@@ -76,10 +75,31 @@ document.getElementById('submit').addEventListener('click', function(){
     const answerContainer = answerContainers[questionNumber];
     const selector = `input[name=question${questionNumber}]:checked`;
     const userAnswer = (answerContainer.querySelector(selector) || {}).value;
-    if(userAnswer === currentQuestion.correctAnswer){ numCorrect++; }
+    const labels = answerContainer.querySelectorAll('label');
+    labels.forEach(l => { l.style.background = ''; l.style.border = ''; });
+    answerContainer.style.background = ''; answerContainer.style.border = '';
+    answerContainer.style.borderRadius = ''; answerContainer.style.padding = '';
+    const correctInput = answerContainer.querySelector(`input[value="${currentQuestion.correctAnswer}"]`);
+    if (userAnswer === currentQuestion.correctAnswer) {
+      numCorrect++;
+      if (correctInput) { correctInput.parentElement.style.background = '#d4edda'; correctInput.parentElement.style.border = '1px solid #28a745'; }
+    } else if (!userAnswer) {
+      // No answer selected: mark correct green + flag question red (unanswered)
+      if (correctInput) { correctInput.parentElement.style.background = '#d4edda'; correctInput.parentElement.style.border = '1px solid #28a745'; }
+      answerContainer.style.background = '#f8d7da';
+      answerContainer.style.border = '1px solid #dc3545';
+      answerContainer.style.borderRadius = '4px';
+      answerContainer.style.padding = '4px 6px';
+    } else {
+      if (correctInput) { correctInput.parentElement.style.background = '#d4edda'; correctInput.parentElement.style.border = '1px solid #28a745'; }
+      const wrongInput = answerContainer.querySelector(`input[value="${userAnswer}"]`);
+      if (wrongInput) { wrongInput.parentElement.style.background = '#f8d7da'; wrongInput.parentElement.style.border = '1px solid #dc3545'; }
+    }
   });
-  document.getElementById('results').innerHTML = `Score: ${numCorrect} out of ${myQuestions.length}`;
-  document.getElementById('results').style.color = "#000";
+  const results = document.getElementById('results');
+  results.innerHTML = `Score: ${numCorrect} out of ${myQuestions.length}` +
+    (numCorrect === myQuestions.length ? ' — All correct!' : ' — green = correct, red = your wrong pick / unanswered.');
+  results.style.color = numCorrect === myQuestions.length ? '#155724' : '#000';
 });
 </script>
 {% endblock %}

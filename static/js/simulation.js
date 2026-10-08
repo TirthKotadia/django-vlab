@@ -62,6 +62,7 @@ function reset2() {
     document.getElementById('line2c').innerHTML = '&lt;img src="logo.png"&gt;';
     document.getElementById('line2c').style.color = "#6c757d";
     document.getElementById('line2c').style.fontStyle = "italic";
+    document.getElementById('line2c').style.fontWeight = "400";
     document.getElementById('step2Badge').style.background = "#000";
     document.getElementById('msg2').innerHTML = "Not configured";
     document.getElementById('msg2').style.background = "white";

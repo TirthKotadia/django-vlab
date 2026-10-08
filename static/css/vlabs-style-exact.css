@@ -111,6 +111,13 @@ html {
   font-weight: bold;
 }
 
+/* Sidebar links: readable size matching reference lab */
+.sidebar .nav-menu-body a {
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.6rem 0.5rem !important;
+}
+
 .nav-menu-body {
   justify-content: center;
 }
@@ -199,10 +206,43 @@ html {
   font-weight: 900;
 }
 
-/* feedback */
-#feedback-btn {
-  color: #2c99ce;
-  border-color: #2c99ce;
+/* feedback: link styled as Bootstrap primary button (white text on blue) */
+#feedback-btn-link,
+#feedback-btn-link:hover {
+  color: #fff;
+}
+
+/* github-markdown's .markdown-body a color beats .btn-primary (equal
+   specificity, later stylesheet). Re-assert full Bootstrap primary look
+   for buttons inside markdown content in ALL states. */
+.markdown-body a.btn-primary,
+.markdown-body a.btn-primary:link,
+.markdown-body a.btn-primary:visited,
+.markdown-body a.btn-primary:hover,
+.markdown-body a.btn-primary:focus,
+.markdown-body a.btn-primary:active {
+  color: #fff !important;
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+  background-image: none !important;
+  text-decoration: none !important;
+}
+.markdown-body a.btn-primary:hover,
+.markdown-body a.btn-primary:focus {
+  background-color: #0069d9 !important;
+  border-color: #0062cc !important;
+}
+
+/* Belt-and-suspenders: hard-center the feedback CTA so no inherited
+   markdown/typography rule can wash it out or collapse it */
+.markdown-body #feedback-btn-link.btn-lg {
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-size: 1.25rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  padding: 0.5rem 1rem !important;
 }
 
 /* to override markdown styling */
@@ -215,6 +255,24 @@ html {
 /* to fix the  extended lines*/
 .markdown-body table tr {
   border-top: 0;
+}
+
+/* Contributors table: kill github-markdown cell padding that created side gaps */
+.markdown-body table.contributors-table {
+  margin-left: 0;
+  margin-right: 0;
+}
+.markdown-body table.contributors-table th,
+.markdown-body table.contributors-table td {
+  padding: 6px 10px;
+}
+.markdown-body table.contributors-table td:first-child,
+.markdown-body table.contributors-table th:first-child {
+  padding-left: 10px;
+}
+.markdown-body table.contributors-table td:last-child,
+.markdown-body table.contributors-table th:last-child {
+  padding-right: 10px;
 }
 
 h1,
