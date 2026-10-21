@@ -1,100 +1,644 @@
-{% extends 'experiment/base.html' %}
+
+{% extends "experiment/base.html" %}
 {% load static %}
-{% block title %}Simulation - Serving Static Files in Django | Virtual Labs{% endblock %}
+
 {% block content %}
-<div class="text-center fix-spacing">
-  <h2 id="simulation">Simulation</h2>
-</div>
+<link rel="stylesheet" href="{% static 'css/vlab-style.css' %}">
 
-<p>Complete the two configuration steps to serve static files correctly. Click the buttons to add the missing code and observe the preview.</p>
+<style>
+/* Main experiment page */
+.fsd-lab {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 24px 20px 50px;
+    color: #243247;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+}
 
-<div style="display:flex; gap:16px; flex-wrap:wrap; font-family:'Open Sans',sans-serif; margin-top:12px;">
-    <div style="flex:1.2; min-width:280px;">
-        <div style="border:1px solid #dee2e6; border-radius:6px; margin-bottom:14px; background:white;">
-            <div style="background:#f8f9fa; padding:8px 12px; border-bottom:1px solid #dee2e6; font-size:13px; font-weight:600; color:#000; display:flex; justify-content:space-between;">
-                <span><span id="step1Badge" style="background:#000; color:white; width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; margin-right:6px;">1</span> Step 1: Configure settings.py</span>
-                <span id="msg1" style="font-size:11px; border:1px solid #dee2e6; padding:2px 8px; border-radius:12px; background:white; color:#000;">Not configured</span>
-            </div>
-            <div style="padding:12px;">
-                <div style="font-size:11px; color:#6c757d; margin-bottom:4px; font-family:monospace;">vlab_project/settings.py</div>
-                <div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:4px; padding:10px; font-family:monospace; font-size:12px; line-height:1.6; color:#000;">
-                    <div>BASE_DIR = Path(__file__).resolve().parent.parent</div>
-                    <div style="margin-top:6px; color:#6c757d;"># Add static config below</div>
-                    <div id="line1" style="color:#6c757d; font-style:italic;"># STATIC_URL not configured</div>
-                </div>
-                <div style="margin-top:10px;">
-                    <button id="btnStep1" class="btn btn-primary btn-sm" onclick="doStep1()">Add Configuration</button>
-                    <button class="btn btn-secondary btn-sm" onclick="reset1()" style="margin-left:6px;">Reset</button>
-                </div>
+.fsd-lab * {
+    box-sizing: border-box;
+}
+
+.fsd-lab .page-heading {
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #dce3eb;
+}
+
+.fsd-lab .eyebrow {
+    margin: 0 0 6px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+}
+
+.fsd-lab h1 {
+    margin: 0 0 8px;
+    color: #17365d;
+    font-size: 29px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+
+.fsd-lab .intro {
+    max-width: 760px;
+    margin: 0;
+    color: #596779;
+    font-size: 15px;
+}
+
+.fsd-lab .section {
+    display: block;
+    width: 100%;
+    margin: 0 0 25px;
+    padding: 22px 24px;
+    background: #ffffff;
+    border: 1px solid #dce3eb;
+    border-radius: 8px;
+}
+
+.fsd-lab .section-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 17px;
+}
+
+.fsd-lab .section-number {
+    display: inline-flex;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: #edf3fa;
+    color: #244b78;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.fsd-lab h2 {
+    margin: 1px 0 3px;
+    color: #17365d;
+    font-size: 19px;
+    line-height: 1.4;
+}
+
+.fsd-lab h3 {
+    margin: 18px 0 8px;
+    color: #334b68;
+    font-size: 15px;
+}
+
+.fsd-lab p {
+    margin-top: 0;
+}
+
+.fsd-lab .muted {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.fsd-lab .instruction-list {
+    margin: 8px 0 0;
+    padding-left: 22px;
+}
+
+.fsd-lab .instruction-list li {
+    margin: 7px 0;
+    padding-left: 3px;
+}
+
+.fsd-lab .field {
+    margin-bottom: 17px;
+}
+
+.fsd-lab label {
+    display: block;
+    margin-bottom: 6px;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.fsd-lab input,
+.fsd-lab select,
+.fsd-lab textarea {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    background: #fff;
+    color: #243247;
+    font: inherit;
+    font-size: 14px;
+}
+
+.fsd-lab input:focus,
+.fsd-lab select:focus,
+.fsd-lab textarea:focus {
+    outline: 2px solid #c6d9f1;
+    border-color: #527da9;
+}
+
+.fsd-lab textarea,
+.fsd-lab pre,
+.fsd-lab code {
+    font-family: Consolas, "Courier New", monospace;
+}
+
+.fsd-lab textarea {
+    min-height: 125px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.fsd-lab .code-block {
+    width: 100%;
+    overflow-x: auto;
+    padding: 15px;
+    border: 1px solid #dce3eb;
+    border-radius: 5px;
+    background: #f6f8fb;
+    color: #26374a;
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.fsd-lab .note {
+    margin: 12px 0 0;
+    padding: 11px 14px;
+    border-left: 3px solid #7896b7;
+    background: #f5f8fc;
+    color: #485a70;
+    font-size: 14px;
+}
+
+.fsd-lab .button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 17px;
+}
+
+.fsd-lab .lab-button {
+    display: inline-block;
+    padding: 10px 17px;
+    border: 1px solid #244b78;
+    border-radius: 5px;
+    background: #244b78;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.15s ease;
+}
+
+.fsd-lab .lab-button:hover {
+    background: #17365d;
+}
+
+.fsd-lab .lab-button.secondary {
+    background: #fff;
+    color: #244b78;
+}
+
+.fsd-lab .lab-button.secondary:hover {
+    background: #f1f5f9;
+}
+
+.fsd-lab .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 12px;
+    border: 1px solid #dce3eb;
+    border-radius: 5px 5px 0 0;
+    background: #f6f8fb;
+}
+
+.fsd-lab .browser-dots {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.fsd-lab .browser-dots span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #b7c2d0;
+}
+
+.fsd-lab .browser-address {
+    min-width: 0;
+    flex: 1;
+    padding: 5px 9px;
+    border: 1px solid #dce3eb;
+    border-radius: 4px;
+    background: #fff;
+    color: #526176;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.fsd-lab .browser-content {
+    min-height: 150px;
+    padding: 22px;
+    border: 1px solid #dce3eb;
+    border-top: 0;
+    border-radius: 0 0 5px 5px;
+    background: #fff;
+}
+
+.fsd-lab .browser-content h3 {
+    margin-top: 0;
+    color: #17365d;
+    font-size: 21px;
+}
+
+.fsd-lab .status-line {
+    margin: 0 0 15px;
+    padding: 10px 12px;
+    border: 1px solid #dce3eb;
+    border-radius: 5px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 14px;
+}
+
+.fsd-lab .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+.fsd-lab .result-table th,
+.fsd-lab .result-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.fsd-lab .result-table th {
+    width: 36%;
+    color: #475569;
+    font-weight: 600;
+}
+
+.fsd-lab .result-table td {
+    color: #243247;
+}
+
+.fsd-lab .progress-track {
+    height: 7px;
+    margin: 10px 0 16px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #e8edf3;
+}
+
+.fsd-lab .progress-fill {
+    width: 0;
+    height: 100%;
+    border-radius: 10px;
+    background: #527da9;
+    transition: width 0.25s ease;
+}
+
+.fsd-lab .concept {
+    margin: 0 0 16px;
+}
+
+.fsd-lab .concept:last-child {
+    margin-bottom: 0;
+}
+
+.fsd-lab .concept strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #334b68;
+}
+
+.fsd-lab .concept p {
+    margin: 0;
+    color: #596779;
+    font-size: 14px;
+}
+
+.fsd-lab .end-note {
+    padding-top: 12px;
+    border-top: 1px solid #dce3eb;
+    color: #64748b;
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .fsd-lab {
+        padding: 18px 12px 35px;
+    }
+
+    .fsd-lab h1 {
+        font-size: 24px;
+    }
+
+    .fsd-lab .section {
+        padding: 17px 15px;
+        margin-bottom: 18px;
+    }
+
+    .fsd-lab .result-table th {
+        width: 40%;
+    }
+}
+</style>
+
+<div class="fsd-lab">
+
+    <header class="page-heading">
+        <p class="eyebrow">Virtual Laboratory · Full Stack Development</p>
+        <h1>Working with Static Files in Django</h1>
+        <p class="intro">
+            Explore how Django locates static files, how template tags generate
+            their URLs, and how a browser requests resources from a web server.
+        </p>
+    </header>
+
+    <!-- SECTION 1 -->
+    <section class="section" id="instructions">
+        <div class="section-heading">
+            <span class="section-number">1</span>
+            <div>
+                <h2>Experiment Instructions</h2>
+                <p class="muted">Understand the task before running the simulation.</p>
             </div>
         </div>
 
-        <div style="border:1px solid #dee2e6; border-radius:6px; margin-bottom:14px; background:white;">
-            <div style="background:#f8f9fa; padding:8px 12px; border-bottom:1px solid #dee2e6; font-size:13px; font-weight:600; color:#000; display:flex; justify-content:space-between;">
-                <span><span id="step2Badge" style="background:#000; color:white; width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; margin-right:6px;">2</span> Step 2: Fix template.html</span>
-                <span id="msg2" style="font-size:11px; border:1px solid #dee2e6; padding:2px 8px; border-radius:12px; background:white; color:#000;">Not configured</span>
-            </div>
-            <div style="padding:12px;">
-                <div style="font-size:11px; color:#6c757d; margin-bottom:4px; font-family:monospace;">templates/index.html</div>
-                <div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:4px; padding:10px; font-family:monospace; font-size:12px; line-height:1.6; color:#000;">
-                    <div id="line2a" style="color:#6c757d; font-style:italic;">&lt;!-- {% load static %} missing --&gt;</div>
-                    <div>&lt;html&gt;</div>
-                    <div>&lt;head&gt;</div>
-                    <div id="line2b" style="padding-left:12px; color:#6c757d; font-style:italic;">&lt;link rel="stylesheet" href="style.css"&gt;</div>
-                    <div>&lt;/head&gt;</div>
-                    <div>&lt;body&gt;</div>
-                    <div id="line2c" style="padding-left:12px; color:#6c757d; font-style:italic;">&lt;img src="logo.png"&gt;</div>
-                    <div>&lt;/body&gt;&lt;/html&gt;</div>
-                </div>
-                <div style="margin-top:10px;">
-                    <button id="btnStep2" class="btn btn-primary btn-sm" onclick="doStep2()">Add Template Tags</button>
-                    <button class="btn btn-secondary btn-sm" onclick="reset2()" style="margin-left:6px;">Reset</button>
-                </div>
+        <p>
+            In Django, static files include CSS stylesheets, JavaScript files,
+            icons and images. Django uses static-file settings and the
+            <code>{% templatetag openblock %} static {% templatetag closeblock %}</code>
+            template tag to build the URL for a resource.
+        </p>
+
+        <ol class="instruction-list">
+            <li>Review the static-file configuration.</li>
+            <li>Select the type of resource you want to request.</li>
+            <li>Enter a sample file path.</li>
+            <li>Run the simulation and inspect the generated URL and response.</li>
+            <li>Read the request analysis and key concepts.</li>
+        </ol>
+
+        <p class="note">
+            <strong>Objective:</strong> Understand the relationship between
+            <code>STATIC_URL</code>, static-file locations, template tags and HTTP responses.
+        </p>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section class="section" id="settings">
+        <div class="section-heading">
+            <span class="section-number">2</span>
+            <div>
+                <h2>Static File Configuration</h2>
+                <p class="muted">Inspect the settings used in this example.</p>
             </div>
         </div>
 
-        <div id="finalMsg" style="margin-bottom:8px;"></div>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-            <button class="btn btn-primary" onclick="verifyOutput()" style="flex:1;">Verify Output</button>
-            <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
-        </div>
-        <div id="verifyResult" style="margin-top:12px; display:none; color:#000;"></div>
-    </div>
-
-    <div style="flex:0.8; min-width:260px;">
-        <div style="border:1px solid #dee2e6; border-radius:6px; background:white; position:sticky; top:10px;">
-            <div style="background:#f8f9fa; padding:8px 12px; border-bottom:1px solid #dee2e6; font-size:13px; font-weight:600; color:#000;">
-                Live Preview
-            </div>
-            <div style="border-bottom:1px solid #dee2e6;">
-                <div style="background:#e9ecef; padding:6px 8px; display:flex; align-items:center; gap:6px;">
-                    <span style="width:10px; height:10px; border-radius:50%; background:#adb5bd; display:inline-block;"></span>
-                    <span style="width:10px; height:10px; border-radius:50%; background:#adb5bd; display:inline-block;"></span>
-                    <span style="width:10px; height:10px; border-radius:50%; background:#adb5bd; display:inline-block;"></span>
-                    <span id="previewUrl" style="background:white; border:1px solid #dee2e6; border-radius:12px; padding:2px 8px; font-size:11px; color:#000; margin-left:6px; flex:1;">http://127.0.0.1:8000/ - Preview</span>
-                </div>
-                <div id="previewContent" style="padding:16px; min-height:170px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:white; color:#000;">
-                </div>
-            </div>
-            <div style="padding:8px 10px; background:#f8f9fa; font-size:11px; color:#000; border-top:1px solid #dee2e6;">
-                Tip: Open browser Network tab to check status 200 or 404.
-            </div>
+        <div class="field">
+            <label for="staticUrl">STATIC_URL</label>
+            <input
+                type="text"
+                id="staticUrl"
+                value="/static/"
+                placeholder="/static/"
+            >
         </div>
 
-        <div style="border:1px solid #dee2e6; border-radius:6px; background:white; margin-top:14px;">
-            <div style="background:#f8f9fa; padding:8px 12px; border-bottom:1px solid #dee2e6; font-size:13px; font-weight:600; color:#000;">
-                Project Structure
-            </div>
-            <div style="padding:10px; font-family:monospace; font-size:11px; line-height:1.6; color:#000;">
-                <div>vlab_project/</div>
-                <div style="padding-left:12px;">├── settings.py</div>
-                <div style="padding-left:12px;">├── static/</div>
-                <div style="padding-left:24px;">├── css/style.css</div>
-                <div style="padding-left:24px;">└── images/logo.png</div>
-                <div style="padding-left:12px;">└── templates/index.html</div>
+        <div class="field">
+            <label for="staticDirs">STATICFILES_DIRS</label>
+            <textarea
+                id="staticDirs"
+                rows="3"
+                placeholder="Enter static directory paths"
+            >BASE_DIR / "static"</textarea>
+        </div>
+
+        <div class="button-row">
+            <button type="button" class="lab-button" id="loadStatic">
+                Apply Configuration
+            </button>
+        </div>
+
+        <p class="note">
+            <strong>Remember:</strong> <code>STATIC_URL</code> is the URL prefix
+            used to reference static resources. <code>STATICFILES_DIRS</code>
+            tells Django where to look for additional static files during development.
+        </p>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section class="section" id="template">
+        <div class="section-heading">
+            <span class="section-number">3</span>
+            <div>
+                <h2>Choose a Static Resource</h2>
+                <p class="muted">Select a resource and see the corresponding template syntax.</p>
             </div>
         </div>
-    </div>
+
+        <div class="field">
+            <label for="assetType">Resource type</label>
+            <select id="assetType">
+                <option value="css">CSS stylesheet</option>
+                <option value="js">JavaScript file</option>
+                <option value="image">Image</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="assetPath">Resource path</label>
+            <input
+                type="text"
+                id="assetPath"
+                value="css/style.css"
+                placeholder="css/style.css"
+            >
+        </div>
+
+        <h3>Template syntax</h3>
+        <pre class="code-block" id="templateCode">{% templatetag openblock %} load static {% templatetag closeblock %}
+&lt;link rel="stylesheet" href="{% templatetag openblock %} static 'css/style.css' {% templatetag closeblock %}"&gt;</pre>
+
+        <p class="note">
+            The <code>static</code> template tag creates a URL from the configured
+            static URL prefix and the resource path.
+        </p>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section class="section" id="browserSimulation">
+        <div class="section-heading">
+            <span class="section-number">4</span>
+            <div>
+                <h2>Browser Simulation</h2>
+                <p class="muted">Preview the resource request and its simulated response.</p>
+            </div>
+        </div>
+
+        <div class="browser-bar">
+            <div class="browser-dots" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="browser-address" id="previewAddress">/static/css/style.css</div>
+        </div>
+
+        <div class="browser-content" id="previewContent">
+            <h3>Resource Preview</h3>
+            <p>
+                Choose a resource above, then select <strong>Run Simulation</strong>
+                to see the expected browser response.
+            </p>
+        </div>
+
+        <div class="button-row">
+            <button type="button" class="lab-button" id="runTest">
+                Run Simulation
+            </button>
+            <button type="button" class="lab-button secondary" id="resetLab">
+                Reset
+            </button>
+        </div>
+
+        <p class="note">
+            This is a learning simulation. Its displayed status is an illustrative
+            result based on the selected example; it does not independently verify
+            whether a file exists on your server.
+        </p>
+    </section>
+
+    <!-- SECTION 5 -->
+    <section class="section" id="requestAnalysis">
+        <div class="section-heading">
+            <span class="section-number">5</span>
+            <div>
+                <h2>Request Analysis</h2>
+                <p class="muted">Review the output of the simulation.</p>
+            </div>
+        </div>
+
+        <p class="status-line" id="overallStatus" aria-live="polite">
+            Status: Waiting to run the simulation.
+        </p>
+
+        <p class="muted" id="resultSummary">
+            Run the simulation to display the request summary.
+        </p>
+
+        <p class="muted" id="testProgress">Checks completed: 0</p>
+        <div class="progress-track" aria-label="Simulation progress">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <table class="result-table">
+            <tbody>
+                <tr>
+                    <th scope="row">Requested resource</th>
+                    <td id="requestedAsset">Not requested</td>
+                </tr>
+                <tr>
+                    <th scope="row">HTTP status</th>
+                    <td id="httpStatus">Not available</td>
+                </tr>
+                <tr>
+                    <th scope="row">Resource type</th>
+                    <td id="responseType">Not available</td>
+                </tr>
+                <tr>
+                    <th scope="row">Checks passed</th>
+                    <td id="checksPassed">Not available</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Diagnostic message</h3>
+        <p class="status-line" id="diagnostics" aria-live="polite">
+            No diagnostics available yet.
+        </p>
+    </section>
+
+    <!-- SECTION 6 -->
+    <section class="section" id="keyConcepts">
+        <div class="section-heading">
+            <span class="section-number">6</span>
+            <div>
+                <h2>Key Concepts</h2>
+                <p class="muted">Review the main ideas from this experiment.</p>
+            </div>
+        </div>
+
+        <div class="concept">
+            <strong>1. STATIC_URL</strong>
+            <p>
+                Defines the URL prefix used to reference static resources, such as
+                <code>/static/</code>.
+            </p>
+        </div>
+
+        <div class="concept">
+            <strong>2. STATICFILES_DIRS</strong>
+            <p>
+                Specifies additional directories in which Django looks for static
+                files during development.
+            </p>
+        </div>
+
+        <div class="concept">
+            <strong>3. The static template tag</strong>
+            <p>
+                The <code>static</code> tag builds a resource URL using the configured
+                static URL prefix and the specified file path.
+            </p>
+        </div>
+
+        <div class="concept">
+            <strong>4. HTTP status codes</strong>
+            <p>
+                A status such as 200 generally indicates success, while 404 means
+                that the requested resource was not found at the requested URL.
+            </p>
+        </div>
+
+        <div class="concept">
+            <strong>5. Development and production</strong>
+            <p>
+                Django's development static-file serving differs from production
+                deployment, where static resources are commonly collected and served
+                by a web server or dedicated static-file service.
+            </p>
+        </div>
+
+        <p class="end-note">
+            Experiment complete. Review the request analysis and repeat the simulation
+            with another resource path to compare the results.
+        </p>
+    </section>
+
 </div>
 
 <script src="{% static 'js/simulation.js' %}"></script>

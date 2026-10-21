@@ -21,44 +21,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/vlabs-style-exact.css' %}">
     <link rel="stylesheet" href="{% static 'css/vlab-style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/interactive.css' %}">
     <style>
       h1 { font-size: 1.8rem; }
       h2 { font-size: 1.4rem; }
       h3 { font-size: 1.2rem; }
       h2, h3 { font-weight: 800; }
-      .sim-card { border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; background:white; margin-bottom:14px; }
-      .sim-card-header { background:#f8fafc; padding:8px 12px; font-size:12.5px; font-weight:700; color:#3e6389; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; }
-      .code-editor { background:#0f172a; border-radius:6px; padding:11px 12px; font-family:'Consolas',monospace; font-size:11.5px; line-height:1.65; color:#e2e8f0; min-height:88px; border:1px solid #1e293b; }
-      .code-line-missing { color:#64748b; font-style:italic; }
-      .code-line-added { color:#4ade80; font-weight:600; }
-      .file-tab { background:#1e293b; color:#94a3b8; padding:4px 9px; font-size:11px; border-radius:4px 4px 0 0; display:inline-block; margin-bottom:-1px; border:1px solid #334155; border-bottom:none; }
-      .preview-window { border:1px solid #cbd5e1; border-radius:6px; overflow:hidden; background:white; }
-      .preview-topbar { background:#f1f5f9; padding:6px 9px; display:flex; align-items:center; gap:6px; border-bottom:1px solid #e2e8f0; }
-      .dot { width:10px; height:10px; border-radius:50%; }
-      .dot.red{background:#ef4444;} .dot.yellow{background:#f59e0b;} .dot.green{background:#22c55e;}
-      .preview-url { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:2px 9px; font-size:11px; color:#64748b; margin-left:8px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      .preview-content { padding:16px; min-height:178px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-      .preview-content.broken { background:#fef2f2; }
-      .preview-content.fixed { background:#f0fdf4; }
-      .status-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:700; }
-      .status-badge.error { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
-      .status-badge.success { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
-      .step-badge { background:#3e6389; color:white; width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; margin-right:6px; }
-      .step-badge.done { background:#16a34a; }
-      .logo-placeholder-exact {
-        width: 180px;
-        height: 48px;
-        border: 2px dashed #3e6389;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #3e6389;
-        font-size: 11px;
-        font-weight: 700;
-        background: #f8fafc;
-        border-radius: 4px;
-        margin-left: 8px;
-      }
       .vlabs-page-content { font-family:"Raleway",sans-serif; }
       .markdown-body code, .markdown-body pre code, .markdown-body pre, code {
         color: #000 !important;
@@ -67,25 +35,44 @@
       }
       .markdown-body a code { color: #000 !important; }
       .markdown-body li, .markdown-body p, .markdown-body ol li { color: #000 !important; }
+      
+      /* Increased Somaiya Logo Styling */
+      .somaiya-header-logo {
+        height: 74px;
+        width: auto;
+        max-height: 80px;
+        padding: 3px 10px;
+        object-fit: contain;
+        display: block;
+      }
+      @media (max-width: 768px) {
+        .somaiya-header-logo {
+          height: 54px;
+          max-height: 58px;
+          padding: 2px 6px;
+        }
+      }
     </style>
 </head>
 <body class="p-0 container-fluid vlabs-page d-flex flex-column justify-content-between">
       <header class="vlabs-header sticky-top bg-white">
-        <nav class="p-0 navbar navbar-light d-flex align-items-stretch">
-          <button class="navbar-toggler px-4" type="button" onclick="toggleMobileMenu()" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="d-flex justify-content-center">
-            <img src="{% static 'images/logo.png' %}" alt="Logo" style="height:48px; width:auto;">
+        <div class="container-fluid px-3 py-1 d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <button class="navbar-toggler me-2 d-lg-none" type="button" onclick="toggleMobileMenu()" aria-label="Toggle navigation" style="padding:4px 8px;">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <a href="{% url 'aim' %}" class="d-flex align-items-center text-decoration-none" title="Somaiya Vidyavihar University">
+              <img src="{% static 'images/logo.png' %}" alt="Somaiya Logo" class="somaiya-header-logo">
+            </a>
           </div>
-          <div id="headerNavbar" class="d-none border-top flex-grow-1 d-lg-flex align-items-center justify-content-end">
+          <div id="headerNavbar" class="d-none d-lg-flex align-items-center justify-content-end">
             <div class="d-flex align-items-center" style="margin-right:20px; font-size:14px; color:#3e6389;">
               <span style="color:#ffcc00; font-size:18px; letter-spacing:1px; margin-right:10px;">★★★★☆</span>
             </div>
-            <a href="#" style="border:none; color:#fff; background-color:#288ec8; text-align:center; font-size:1.05rem; border-radius:1em; padding:0.6em 1.2em; margin:0 6px; text-decoration:none; display:inline-block;">Rate Me</a>
-            <a href="#" style="border:none; color:#fff; background-color:#288ec8; text-align:center; font-size:1.05rem; border-radius:1em; padding:0.6em 1.2em; margin:0 10px; text-decoration:none; display:inline-block;">Report a Bug</a>
+            <a href="#" style="border:none; color:#fff; background-color:#288ec8; text-align:center; font-size:1.05rem; border-radius:1em; padding:0.4em 1.2em; margin:0 6px; text-decoration:none; display:inline-block;">Rate Me</a>
+            <a href="#" style="border:none; color:#fff; background-color:#288ec8; text-align:center; font-size:1.05rem; border-radius:1em; padding:0.4em 1.2em; margin:0 10px; text-decoration:none; display:inline-block;">Report a Bug</a>
           </div>
-        </nav>
+        </div>
       </header>
       <div class="container-fluid flex-fill d-flex flex-column vlabs-page-main">
         <div class="row d-flex justify-content-between">
@@ -104,7 +91,7 @@
               <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="margin:1.75rem auto; max-width:500px;">
                   <div class="modal-content" style="background:white; border-radius:8px;">
                       <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #e8e8e8;">
-                          <h5 class="modal-title"><img src="{% static 'images/logo.png' %}" alt="Logo" style="height:36px; width:auto;"></h5>
+                          <h5 class="modal-title"><img src="{% static 'images/logo.png' %}" alt="Logo" style="height:48px; width:auto;"></h5>
                           <button type="button" class="btn-close" onclick="document.getElementById('popupMenu').style.display='none'"></button>
                       </div>
                       <div class="modal-body nav-menu" style="padding:16px;">
@@ -202,14 +189,12 @@
       </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      // Single mobile-menu toggle (hamburger button + close button both use this).
       function toggleMobileMenu() {
         var el = document.getElementById('popupMenu');
         var isOpen = el.style.display === 'block';
         el.style.display = isOpen ? 'none' : 'block';
         el.classList.toggle('show', !isOpen);
       }
-      // Back-compat alias (older inline handlers called toggle()).
       function toggle() { toggleMobileMenu(); }
     </script>
 </body>
