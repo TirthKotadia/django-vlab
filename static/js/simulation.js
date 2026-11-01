@@ -1,456 +1,270 @@
-
+/* Static-files simulation page.
+   Every result is computed by the server (experiment/simulator.py via /api/simulate/). */
 document.addEventListener("DOMContentLoaded", function () {
-    const staticUrl = document.getElementById("staticUrl");
-    const staticDirs = document.getElementById("staticDirs");
-    const loadStatic = document.getElementById("loadStatic");
-    const assetType = document.getElementById("assetType");
-    const assetPath = document.getElementById("assetPath");
+    "use strict";
 
-    const settingsCode = document.getElementById("settingsCode");
-    const templateCode = document.getElementById("templateCode");
-    const previewContent = document.getElementById("previewContent");
-    const previewAddress = document.getElementById("previewAddress");
-
-    const overallStatus = document.getElementById("overallStatus");
-    const testProgress = document.getElementById("testProgress");
-    const resultSummary = document.getElementById("resultSummary");
-    const requestedAsset = document.getElementById("requestedAsset");
-    const httpStatus = document.getElementById("httpStatus");
-    const responseType = document.getElementById("responseType");
-    const checksPassed = document.getElementById("checksPassed");
-    const diagnostics = document.getElementById("diagnostics");
-
-    const assets = {
-        css: {
-            name: "CSS stylesheet",
-            path: "css/style.css",
-            tag: '<link rel="stylesheet" href="{% static \'css/style.css\' %}">',
-            description: "Stylesheet request"
-        },
-        image: {
-            name: "Image",
-            path: "images/logo.png",
-            tag: '<img src="{% static \'images/logo.png\' %}" alt="Logo">',
-            description: "Image request"
-        },
-        js: {
-            name: "JavaScript",
-            path: "js/app.js",
-            tag: '<script src="{% static \'js/app.js\' %}"></script>',
-            description: "JavaScript request"
-        }
+    // Works on its own: the inline SIM_DEFAULTS block in the template is optional.
+    var D = window.SIM_DEFAULTS || {};
+    D.config = D.config || {
+        static_url: "/static/",
+        staticfiles_dirs: ["static"],
+        static_root: "staticfiles",
+        debug: true,
+        staticfiles_app: true,
+        collectstatic_run: false,
+        load_static: true,
+        use_static_tag: true
     };
+    D.simulateUrl = D.simulateUrl || "/api/simulate/";
 
-    let hasRun = false;
+    function $(id) { return document.getElementById(id); }
 
-    function escapeHTML(value) {
-        return String(value).replace(/[&<>"']/g, function (char) {
-            return {
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;"
-            }[char];
+    var staticUrl = $("staticUrl");
+    var staticDirs = $("staticDirs");
+    var applyBtn = $("loadStatic");
+    var assetType = $("assetType");
+    var assetPath = $("assetPath");
+    var templateCode = $("templateCode");
+    var previewContent = $("previewContent");
+    var previewAddress = $("previewAddress");
+    var overallStatus = $("overallStatus");
+    var testProgress = $("testProgress");
+    var progressFill = $("progressFill");
+    var resultSummary = $("resultSummary");
+    var requestedAsset = $("requestedAsset");
+    var httpStatus = $("httpStatus");
+    var responseType = $("responseType");
+    var checksPassed = $("checksPassed");
+    var diagnostics = $("diagnostics");
+    var runBtn = $("runTest");
+    var resetBtn = $("resetLab");
+
+    var TOTAL_STAGES = 5;
+    var DEFAULT_PATHS = { css: "css/style.css", js: "js/app.js", image: "images/logo.png" };
+
+    var applied = null;      // configuration committed with "Apply Configuration"
+    var requestId = 0;
+
+    /* ---------------- helpers ---------------- */
+    function esc(v) {
+        return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
         });
     }
 
-    function getSelectedAsset() {
-        return assets[assetType.value] || assets.css;
+    function csrf() {
+        var m = document.cookie.match("(^|;)\\s*csrftoken=([^;]*)");
+        return m ? decodeURIComponent(m[2]) : (window.SIM_CSRF || "");
     }
 
-    function getRequestedPath() {
-        const asset = getSelectedAsset();
-
-        if (assetPath.value === "plain") {
-            return asset.path.split("/").pop();
-        }
-
-        if (assetPath.value === "missing") {
-            return "missing/" + asset.path.split("/").pop();
-        }
-
-        return asset.path;
+    // 'BASE_DIR / "static"', "static" or static  ->  static
+    function parseDirs(text) {
+        return text.split(/[\n,]+/).map(function (part) {
+            part = part.trim().replace(/,$/, "");
+            if (!part) return "";
+            var q = part.match(/["']([^"']*)["']/);
+            if (q) return q[1].trim();
+            return part.replace(/^BASE_DIR\s*\/\s*/, "").trim();
+        }).filter(Boolean);
     }
 
-    function updateSettingsCode() {
-        const lines = [
-            "BASE_DIR = Path(__file__).resolve().parent.parent",
-            ""
-        ];
-
-        if (staticUrl.checked) {
-            lines.push("STATIC_URL = '/static/'");
-        } else {
-            lines.push("# STATIC_URL is not configured");
-        }
-
-        if (staticDirs.checked) {
-            lines.push("STATICFILES_DIRS = [BASE_DIR / 'static']");
-        } else {
-            lines.push("# STATICFILES_DIRS is not configured");
-        }
-
-        settingsCode.textContent = lines.join("\n");
+    function readConfig() {
+        var cfg = {};
+        Object.keys(D.config).forEach(function (k) { cfg[k] = D.config[k]; });
+        cfg.static_url = staticUrl.value;
+        cfg.staticfiles_dirs = parseDirs(staticDirs.value);
+        return cfg;
     }
 
+    function cleanPath() {
+        return assetPath.value.trim().replace(/^\/+/, "");
+    }
+
+    /* ---------------- template syntax (live) ---------------- */
     function updateTemplateCode() {
-        const asset = getSelectedAsset();
-        const lines = [];
-
-        if (loadStatic.checked) {
-            lines.push("{% load static %}");
+        var p = cleanPath() || DEFAULT_PATHS[assetType.value];
+        var tag;
+        if (assetType.value === "js") {
+            tag = "<script src=\"{% static '" + p + "' %}\"></script>";
+        } else if (assetType.value === "image") {
+            tag = "<img src=\"{% static '" + p + "' %}\" alt=\"Logo\">";
         } else {
-            lines.push("<!-- Django static tag not loaded -->");
+            tag = "<link rel=\"stylesheet\" href=\"{% static '" + p + "' %}\">";
         }
+        templateCode.textContent = "{% load static %}\n" + tag;
+    }
 
-        lines.push("<html>");
-        lines.push("<head>");
+    /* ---------------- idle / stale state ---------------- */
+    function setIdle(message) {
+        previewAddress.textContent = "/static/" + (cleanPath() || DEFAULT_PATHS[assetType.value]);
+        previewContent.innerHTML =
+            "<h3>Resource Preview</h3><p>Choose a resource above, then select " +
+            "<strong>Run Simulation</strong> to see the expected browser response.</p>";
+        overallStatus.textContent = "Status: Waiting to run the simulation.";
+        resultSummary.textContent = message || "Run the simulation to display the request summary.";
+        testProgress.textContent = "Checks completed: 0";
+        progressFill.style.width = "0";
+        requestedAsset.textContent = "Not requested";
+        httpStatus.textContent = "Not available";
+        responseType.textContent = "Not available";
+        checksPassed.textContent = "Not available";
+        diagnostics.textContent = "No diagnostics available yet.";
+    }
 
-        if (assetType.value === "css") {
-            lines.push("  " + asset.tag);
+    /* ---------------- render server result ---------------- */
+    function stagesPassed(r) {
+        return r.steps.filter(function (s) { return s.ok; }).length;
+    }
+
+    function renderResult(data) {
+        var r = data.results[0];
+        var passed = stagesPassed(r);
+        var origin = "127.0.0.1:8000";
+
+        previewAddress.textContent = r.url ? origin + (r.url.charAt(0) === "/" ? r.url : "/" + r.url) : origin + "/";
+
+        if (r.ok) {
+            var what = r.asset_type === "stylesheet" ? "The stylesheet was downloaded and applied."
+                     : r.asset_type === "script" ? "The script was downloaded and executed."
+                     : r.asset_type === "image" ? "The image was downloaded and displayed."
+                     : "The file was delivered.";
+            previewContent.innerHTML =
+                "<h3>" + r.status + " OK</h3>" +
+                "<p>" + esc(what) + "</p>" +
+                "<p><strong>" + esc(r.asset) + "</strong><br>" +
+                esc(r.mime_type) + " · " + esc(r.size) + "</p>";
         } else {
-            lines.push("  <!-- Selected asset: " + asset.name + " -->");
+            previewContent.innerHTML =
+                "<h3>" + r.status + " — static asset could not be loaded</h3>" +
+                "<p>" + esc(r.hint) + "</p>" +
+                "<p><strong>Requested URL:</strong><br><code>" + esc(r.url || r.asset) + "</code></p>";
         }
 
-        lines.push("</head>");
-        lines.push("<body>");
+        overallStatus.textContent = "Status: " + (r.headers.Status || r.status) +
+            (r.ok ? " — request succeeded." : " — request failed at stage " + r.failed_stage + " of " + TOTAL_STAGES + ".");
+        resultSummary.textContent = r.hint;
+        testProgress.textContent = "Checks completed: " + passed + " of " + TOTAL_STAGES;
+        progressFill.style.width = Math.round(passed / TOTAL_STAGES * 100) + "%";
+        progressFill.style.background = r.ok ? "#28754d" : "#a94b40";
 
-        if (assetType.value !== "css") {
-            lines.push("  " + asset.tag);
+        requestedAsset.textContent = r.url || r.asset;
+        httpStatus.textContent = r.headers.Status || String(r.status);
+        responseType.textContent = r.mime_type + " (" + r.asset_type + ")";
+        checksPassed.textContent = passed + " / " + TOTAL_STAGES + " stages";
+
+        var html = r.steps.map(function (s) {
+            return "<span style=\"display:block;margin-bottom:6px\">" +
+                (s.ok ? "✔ " : "✘ ") + "<strong>Stage " + s.stage + " · " + esc(s.title) + "</strong><br>" +
+                esc(s.detail) + "</span>";
+        }).join("");
+
+        if (!r.ok && r.diagnosis) {
+            html += "<span style=\"display:block;margin-top:10px\"><strong>" + esc(r.diagnosis.error) + "</strong><br>" +
+                "<em>Cause:</em> " + esc(r.diagnosis.cause) + "<br>" +
+                "<em>Fix:</em> " + esc(r.diagnosis.fix) + "<br>" +
+                "<code style=\"white-space:pre-wrap\">" + esc(r.diagnosis.code) + "</code></span>";
         }
-
-        lines.push("</body>");
-        lines.push("</html>");
-
-        if (assetPath.value === "plain") {
-            lines.push("");
-            lines.push("Note: A relative path is being tested.");
-        } else if (assetPath.value === "missing") {
-            lines.push("");
-            lines.push("Note: The selected file path does not exist.");
-        }
-
-        templateCode.textContent = lines.join("\n");
+        diagnostics.innerHTML = html;
     }
 
-    function updatePreviewBeforeTest() {
-        if (hasRun) return;
-
-        previewAddress.textContent = "127.0.0.1:8000/example/";
-
-        previewContent.innerHTML = `
-            <div class="demo-site">
-                <h4>My Django Website</h4>
-                <p>Welcome to the example page.</p>
-                <div class="demo-banner">
-                    Ready to test the selected static asset.
-                </div>
-                <p class="small-note">
-                    Change the settings or asset path, then click Run Test.
-                </p>
-            </div>
-        `;
-
-        overallStatus.className = "status-pill";
-        overallStatus.textContent = "Not tested";
-        testProgress.style.width = "0%";
-        resultSummary.textContent =
-            "Configure the settings and click Run Test.";
+    function showProblem(message) {
+        overallStatus.textContent = "Status: Could not run the simulation.";
+        resultSummary.textContent = message;
+        diagnostics.textContent = message;
     }
 
-    function showDiagnostics(messages, success) {
-        const heading = success
-            ? "Configuration check passed"
-            : "Things to check";
-
-        diagnostics.innerHTML =
-            "<strong>" + heading + "</strong>" +
-            '<ul class="result-list">' +
-            messages.map(function (message) {
-                return "<li>" + escapeHTML(message) + "</li>";
-            }).join("") +
-            "</ul>";
-    }
-
-    function runTest() {
-        hasRun = true;
-
-        const asset = getSelectedAsset();
-        const requestedPath = getRequestedPath();
-
-        const checks = [
-            {
-                name: "STATIC_URL is configured",
-                passed: staticUrl.checked,
-                fix: "Define STATIC_URL = '/static/' in settings.py."
-            },
-            {
-                name: "Static directory is configured",
-                passed: staticDirs.checked,
-                fix: "Configure STATICFILES_DIRS for the project-level static directory."
-            },
-            {
-                name: "Django static template tag is loaded",
-                passed: loadStatic.checked,
-                fix: "Add {% load static %} at the top of the template."
-            },
-            {
-                name: "Asset path is correct",
-                passed: assetPath.value === "correct",
-                fix: "Use the correct path inside the static template tag."
-            }
-        ];
-
-        const passedCount = checks.filter(function (check) {
-            return check.passed;
-        }).length;
-
-        const success = passedCount === checks.length;
-        const status = success ? "200 OK" : "404 Not Found";
-
-        const failedChecks = checks.filter(function (check) {
-            return !check.passed;
+    /* ---------------- server call ---------------- */
+    function simulate(cfg, path) {
+        var my = ++requestId;
+        runBtn.disabled = true;
+        return fetch(D.simulateUrl, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrf() },
+            body: JSON.stringify({ config: cfg, assets: [path] })
+        }).then(function (resp) {
+            return resp.json().then(function (body) { return { ok: resp.ok, body: body }; });
+        }).then(function (res) {
+            if (my !== requestId) return null;       // superseded by a newer request
+            if (!res.ok) throw new Error(res.body.error || "The server rejected the request.");
+            return res.body;
+        }).then(function (data) {
+            runBtn.disabled = false;
+            return data;
+        }, function (err) {
+            runBtn.disabled = false;
+            throw err;
         });
+    }
 
-        updateSettingsCode();
-        updateTemplateCode();
-
-        requestedAsset.textContent = requestedPath;
-        httpStatus.textContent = status;
-        httpStatus.className = "status-pill " +
-            (success ? "success" : "error");
-
-        responseType.textContent = asset.name;
-        checksPassed.textContent = passedCount + " / " + checks.length;
-
-        overallStatus.textContent = success ? "Passed" : "Failed";
-        overallStatus.className = "status-pill " +
-            (success ? "success" : "error");
-
-        testProgress.style.width =
-            Math.round((passedCount / checks.length) * 100) + "%";
-
-        testProgress.style.background = success ? "#28754d" : "#a94b40";
-
-        if (success) {
-            resultSummary.textContent =
-                "All configuration checks passed in this simulation.";
-        } else {
-            resultSummary.textContent =
-                "The simulated request failed. Review the diagnostics below.";
+    /* ---------------- actions ---------------- */
+    function applyConfiguration() {
+        var cfg = readConfig();
+        if (!cfg.staticfiles_dirs.length) {
+            showProblem("STATICFILES_DIRS is empty. Django has no folder to search — add one, for example BASE_DIR / \"static\".");
+            return Promise.resolve(false);
         }
+        return simulate(cfg, cleanPath() || DEFAULT_PATHS[assetType.value]).then(function (data) {
+            if (!data) return false;
+            applied = data.config;                   // validated + normalised by the server
+            setIdle("Configuration applied: STATIC_URL = '" + applied.static_url +
+                    "', searching " + applied.staticfiles_dirs.map(function (d) {
+                        return "BASE_DIR / '" + d + "'";
+                    }).join(", ") + ". Now run the simulation.");
+            diagnostics.textContent = "Configuration saved. Run the simulation to test a request.";
+            return true;
+        }, function (err) {
+            showProblem(err.message);
+            return false;
+        });
+    }
 
-        previewAddress.textContent =
-            "127.0.0.1:8000/static/" + requestedPath;
-
-        if (success) {
-            previewContent.innerHTML = `
-                <div class="demo-site">
-                    <h4>My Django Website</h4>
-                    <p>The selected asset passed the configuration checks.</p>
-                    <div class="demo-banner">
-                        ${escapeHTML(asset.name)} request successful
-                    </div>
-                    <p class="small-note">
-                        Simulated response: 200 OK
-                    </p>
-                </div>
-            `;
-        } else {
-            previewContent.innerHTML = `
-                <div class="error-preview">
-                    <h4>Static asset could not be loaded</h4>
-                    <p>The simulated browser request did not pass all checks.</p>
-                    <p><strong>Requested path:</strong></p>
-                    <code>${escapeHTML(requestedPath)}</code>
-                    <p style="margin-top:10px;">
-                        Review the configuration and try again.
-                    </p>
-                </div>
-            `;
+    function runSimulation() {
+        var path = cleanPath();
+        if (!path) {
+            overallStatus.textContent = "Status: 400 Bad Request";
+            resultSummary.textContent = "Please enter a resource path.";
+            diagnostics.textContent = "A resource path is required before a request can be made.";
+            return;
         }
-
-        showDiagnostics(
-            success
-                ? [
-                    "STATIC_URL is configured.",
-                    "The project static directory is configured.",
-                    "The static template tag is loaded.",
-                    "The selected path passed the simulation checks."
-                ]
-                : failedChecks.map(function (check) {
-                    return check.fix;
-                }),
-            success
-        );
+        overallStatus.textContent = "Status: Running simulation…";
+        simulate(readConfig(), path).then(function (data) {
+            if (data) { applied = data.config; renderResult(data); }
+        }, function (err) {
+            showProblem(err.message);
+        });
     }
 
     function resetLab() {
-        staticUrl.checked = true;
-        staticDirs.checked = true;
-        loadStatic.checked = true;
+        requestId++;                                  // drop any in-flight response
+        runBtn.disabled = false;
+        staticUrl.value = D.config.static_url;
+        staticDirs.value = "BASE_DIR / \"" + D.config.staticfiles_dirs[0] + "\"";
         assetType.value = "css";
-        assetPath.value = "correct";
-        hasRun = false;
-
-        updateSettingsCode();
+        assetPath.value = DEFAULT_PATHS.css;
+        applied = null;
         updateTemplateCode();
-
-        requestedAsset.textContent = "—";
-        httpStatus.textContent = "—";
-        httpStatus.className = "status-pill";
-        responseType.textContent = "—";
-        checksPassed.textContent = "0 / 4";
-
-        overallStatus.textContent = "Not tested";
-        overallStatus.className = "status-pill";
-        testProgress.style.width = "0%";
-        testProgress.style.background = "#28754d";
-
-        resultSummary.textContent =
-            "Configure the settings and click Run Test.";
-
-        diagnostics.innerHTML =
-            '<p class="muted">Test results and suggestions will appear here.</p>';
-
-        updatePreviewBeforeTest();
+        setIdle();
     }
 
-    [staticUrl, staticDirs, loadStatic, assetType, assetPath].forEach(
-        function (control) {
-            control.addEventListener("change", function () {
-                updateSettingsCode();
-                updateTemplateCode();
+    /* ---------------- wiring ---------------- */
+    function markStale() {
+        updateTemplateCode();
+        setIdle("Settings changed. Run the simulation again.");
+        diagnostics.textContent = "Settings changed. Run the simulation again.";
+    }
 
-                hasRun = false;
-                updatePreviewBeforeTest();
+    assetType.addEventListener("change", function () {
+        assetPath.value = DEFAULT_PATHS[assetType.value];     // sensible path for the chosen type
+        markStale();
+    });
+    assetPath.addEventListener("input", markStale);
+    staticUrl.addEventListener("input", markStale);
+    staticDirs.addEventListener("input", markStale);
 
-                requestedAsset.textContent = "—";
-                httpStatus.textContent = "—";
-                httpStatus.className = "status-pill";
-                responseType.textContent = "—";
-                checksPassed.textContent = "0 / 4";
-
-                diagnostics.innerHTML =
-                    '<p class="muted">Settings changed. Run the test again.</p>';
-            });
-        }
-    );
-
-    document.getElementById("runTest").addEventListener("click", runTest);
-    document.getElementById("resetLab").addEventListener("click", resetLab);
+    applyBtn.addEventListener("click", applyConfiguration);
+    runBtn.addEventListener("click", runSimulation);
+    resetBtn.addEventListener("click", resetLab);
 
     resetLab();
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-    const type = document.getElementById("assetType");
-    const path = document.getElementById("assetPath");
-    const runButton = document.getElementById("runTest");
-    const resetButton = document.getElementById("resetLab");
-
-    const status = document.getElementById("httpStatus");
-    const responseType = document.getElementById("responseType");
-    const requestedAsset = document.getElementById("requestedAsset");
-    const summary = document.getElementById("resultSummary");
-    const diagnostics = document.getElementById("diagnostics");
-    const preview = document.getElementById("previewContent");
-    const address = document.getElementById("previewAddress");
-
-    if (!runButton || !type || !path) return;
-
-    const defaults = {
-        type: type.value,
-        path: path.value
-    };
-
-    function runSimulation() {
-        const selectedType = type.value;
-        const selectedPath = path.value.trim();
-
-        if (!selectedPath) {
-            status.textContent = "400";
-            summary.textContent = "Please enter a file path.";
-            diagnostics.textContent =
-                "A resource path is required before a request can be made.";
-            return;
-        }
-
-        const cleanPath = selectedPath.replace(/^\/+/, "");
-        const validFiles = {
-            css: ["css/style.css", "css/vlab-style.css"],
-            js: ["js/script.js", "js/simulation.js"],
-            image: ["images/background.jpg", "images/logo.png"]
-        };
-
-        const found = (validFiles[selectedType] || [])
-            .includes(cleanPath);
-
-        requestedAsset.textContent = cleanPath;
-        address.textContent = "/static/" + cleanPath;
-
-        if (found) {
-            status.textContent = "200 OK";
-            responseType.textContent =
-                selectedType === "css" ? "text/css" :
-                selectedType === "js" ? "application/javascript" :
-                "image/*";
-
-            summary.textContent = "Resource loaded successfully!";
-            diagnostics.textContent =
-                "The simulated server found the selected resource and returned a successful response.";
-
-            preview.innerHTML = "";
-
-            if (selectedType === "css") {
-                preview.textContent =
-                    "CSS resource loaded\n\nExample: body { font-family: Arial; }";
-            } else if (selectedType === "js") {
-                preview.textContent =
-                    "JavaScript resource loaded\n\nExample: console.log('Resource loaded');";
-            } else {
-                preview.textContent =
-                    "Image resource loaded\n\nThe simulated response represents an image file.";
-            }
-        } else {
-            status.textContent = "404 Not Found";
-            responseType.textContent = "text/html";
-            summary.textContent = "Resource not found.";
-            diagnostics.textContent =
-                "Check the selected file type and path. The path does not match a resource in this simulation.";
-            preview.textContent =
-                "404 — The requested static resource could not be found.";
-        }
-    }
-
-    function resetSimulation() {
-        type.value = defaults.type;
-        path.value = defaults.path;
-
-        [status, responseType, requestedAsset, summary,
-         diagnostics, preview, address].forEach(element => {
-            if (element) element.textContent = "—";
-        });
-
-        summary.textContent = "Run the simulation to view results.";
-        preview.textContent = "Your response will appear here.";
-        address.textContent = "http://127.0.0.1:8000/";
-    }
-
-    runButton.addEventListener("click", runSimulation);
-
-    if (resetButton) {
-        resetButton.addEventListener("click", resetSimulation);
-    }
-
-    type.addEventListener("change", () => {
-        summary.textContent =
-            "Resource type changed. Run the simulation to test it.";
-    });
-
-    path.addEventListener("input", () => {
-        summary.textContent =
-            "Path edited. Run the simulation to test the request.";
-    });
 });

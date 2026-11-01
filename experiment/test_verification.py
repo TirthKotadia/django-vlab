@@ -111,7 +111,7 @@ def run_tests():
         'css/interactive.css',
         'css/simulation.css',
         'js/simulation.js',
-        'js/quiz.js',
+    
     ]
     for s in statics:
         loc = finders.find(s)

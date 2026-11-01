@@ -1,4 +1,3 @@
-
 {% extends "experiment/base.html" %}
 {% load static %}
 
@@ -641,5 +640,13 @@
 
 </div>
 
+<script>
+    window.SIM_DEFAULTS = {
+        config: {{ default_config_json|safe }},
+        files: {{ sim_files_json|safe }},
+        simulateUrl: "{% url 'api_simulate' %}"
+    };
+</script>
 <script src="{% static 'js/simulation.js' %}"></script>
 {% endblock %}
+
