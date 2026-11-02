@@ -123,22 +123,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         previewAddress.textContent = r.url ? origin + (r.url.charAt(0) === "/" ? r.url : "/" + r.url) : origin + "/";
 
-        if (r.ok) {
-            var what = r.asset_type === "stylesheet" ? "The stylesheet was downloaded and applied."
-                     : r.asset_type === "script" ? "The script was downloaded and executed."
-                     : r.asset_type === "image" ? "The image was downloaded and displayed."
-                     : "The file was delivered.";
-            previewContent.innerHTML =
-                "<h3>" + r.status + " OK</h3>" +
-                "<p>" + esc(what) + "</p>" +
-                "<p><strong>" + esc(r.asset) + "</strong><br>" +
-                esc(r.mime_type) + " · " + esc(r.size) + "</p>";
-        } else {
-            previewContent.innerHTML =
-                "<h3>" + r.status + " — static asset could not be loaded</h3>" +
-                "<p>" + esc(r.hint) + "</p>" +
-                "<p><strong>Requested URL:</strong><br><code>" + esc(r.url || r.asset) + "</code></p>";
-        }
+        renderPreview(r);
 
         overallStatus.textContent = "Status: " + (r.headers.Status || r.status) +
             (r.ok ? " — request succeeded." : " — request failed at stage " + r.failed_stage + " of " + TOTAL_STAGES + ".");
@@ -165,6 +150,137 @@ document.addEventListener("DOMContentLoaded", function () {
                 "<code style=\"white-space:pre-wrap\">" + esc(r.diagnosis.code) + "</code></span>";
         }
         diagnostics.innerHTML = html;
+    }
+
+
+    /* ---------------- real-life preview ---------------- */
+    var LOGO_SVG =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">' +
+        '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#0c4b33"/><stop offset="1" stop-color="#44b78b"/></linearGradient></defs>' +
+        '<rect width="160" height="160" rx="32" fill="url(#g)"/>' +
+        '<circle cx="80" cy="80" r="50" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="6"/>' +
+        '<text x="80" y="96" font-family="Arial,Helvetica,sans-serif" font-size="52" font-weight="700" ' +
+        'text-anchor="middle" fill="#fff">dj</text></svg>';
+
+    var DEMO_CSS = {
+        "css/style.css":
+            "body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#243247}" +
+            ".hero{background:#244b78;color:#fff;padding:22px;text-align:center}" +
+            ".hero h1{margin:0 0 4px;font-size:24px}.hero p{margin:0;opacity:.85;font-size:13px}" +
+            "main{padding:18px;max-width:420px;margin:0 auto}" +
+            ".card{background:#fff;border:1px solid #dce3eb;border-radius:8px;padding:14px;margin-bottom:14px}" +
+            ".btn{background:#2e8b57;color:#fff;border:0;border-radius:5px;padding:9px 16px;font-weight:700;cursor:pointer}",
+        "css/theme.css":
+            "body{margin:0;font-family:Georgia,serif;background:#12151c;color:#e6e9ef}" +
+            ".hero{background:linear-gradient(135deg,#6d28d9,#db2777);color:#fff;padding:22px;text-align:center}" +
+            ".hero h1{margin:0 0 4px;font-size:24px;letter-spacing:1px}.hero p{margin:0;opacity:.9;font-size:13px}" +
+            "main{padding:18px;max-width:420px;margin:0 auto}" +
+            ".card{background:#1d222c;border:1px solid #333b4a;border-radius:12px;padding:14px;margin-bottom:14px}" +
+            ".btn{background:#f59e0b;color:#111;border:0;border-radius:20px;padding:9px 18px;font-weight:700;cursor:pointer}"
+    };
+
+    var DEMO_JS =
+        "(function(){var n=0;console.log('app.js loaded successfully');" +
+        "document.getElementById('btn').onclick=function(){n++;" +
+        "document.getElementById('count').textContent=n;" +
+        "console.log('Button clicked '+n+' time(s)');};})();";
+
+    function kindOf(path) {
+        if (/\.css$/i.test(path)) return "css";
+        if (/\.js$/i.test(path)) return "js";
+        return "image";
+    }
+
+    function demoPage(kind, asset, ok, failText) {
+        var head = "<meta charset='utf-8'><style>*{box-sizing:border-box}html,body{margin:0}</style>";
+        if (kind === "css") {
+            var css = ok ? (DEMO_CSS[asset] || DEMO_CSS["css/style.css"]) : "";
+            var banner = ok ? "" :
+                "<div style='background:#fff3cd;color:#664d03;padding:6px 10px;font:12px Arial'>" +
+                "Stylesheet failed to load (" + failText + ") — page shown without styles</div>";
+            return "<!doctype html><html><head>" + head + "<style>" + css + "</style></head><body>" + banner +
+                "<div class='hero'><h1>My Django Site</h1><p>Styled by " + esc(asset) + "</p></div>" +
+                "<main><div class='card'><h3 style='margin-top:0'>Welcome</h3>" +
+                "<p>This page uses the static stylesheet you requested.</p></div>" +
+                "<button class='btn'>Click me</button></main></body></html>";
+        }
+        if (kind === "js") {
+            var js = ok ? DEMO_JS : "";
+            return "<!doctype html><html><head>" + head +
+                "<style>body{font:14px Arial;padding:14px;color:#243247}" +
+                "button{background:#244b78;color:#fff;border:0;border-radius:5px;padding:8px 14px;cursor:pointer}" +
+                "#console{margin-top:12px;background:#142235;color:#d9f0e4;font:12px Consolas,monospace;padding:8px;border-radius:6px;min-height:70px}" +
+                "#console .err{color:#ff8b83}</style></head><body>" +
+                "<h3 style='margin-top:0'>Interactive page</h3>" +
+                "<button id='btn'>Click me</button> Clicks: <b id='count'>0</b>" +
+                "<div id='console'></div>" +
+                "<script>(function(){var o=document.getElementById('console');" +
+                "function w(t,c){var d=document.createElement('div');d.textContent=t;if(c)d.className=c;o.appendChild(d);}" +
+                "console.log=function(){w([].slice.call(arguments).join(' '));};" +
+                "console.error=function(){w([].slice.call(arguments).join(' '),'err');};})();<\/script>" +
+                (ok ? "" :
+                    "<script>console.error('Failed to load resource: " + failText + "');" +
+                    "document.getElementById('btn').onclick=function(){" +
+                    "try{initApp();}catch(e){console.error('Uncaught '+e.name+': '+e.message);}};<\/script>") +
+                "<script>" + js + "<\/script></body></html>";
+        }
+        // image
+        var inner;
+        if (ok) {
+            var src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(LOGO_SVG);
+            if (/\.ico$/i.test(asset)) {
+                inner = "<div style='display:inline-flex;align-items:center;gap:8px;border:1px solid #cbd5e1;" +
+                    "border-bottom:0;border-radius:8px 8px 0 0;padding:8px 14px;background:#fff;font:13px Arial'>" +
+                    "<img src='" + src + "' width='16' height='16' alt=''> My Django Site</div>" +
+                    "<p style='font:12px Arial;color:#64748b'>The favicon appears in the browser tab.</p>";
+            } else {
+                inner = "<img src='" + src + "' width='150' height='150' alt='Logo' style='border-radius:16px'>";
+            }
+        } else {
+            inner = "<div style='display:inline-block;border:2px dashed #c9544a;border-radius:8px;padding:14px;" +
+                "font:13px Arial;color:#9f2c25;background:#fff6f5'>" +
+                "<img src='data:image/png;base64,AAAA' alt='Logo' width='60' height='60'>" +
+                "<div style='margin-top:6px'>Broken image — " + failText + "</div></div>";
+        }
+        return "<!doctype html><html><head>" + head + "</head><body style='font-family:Arial;text-align:center;padding:24px'>" +
+            inner + "</body></html>";
+    }
+
+    function renderPreview(r) {
+        var asset = r.asset.replace(/^\/+/, "");
+        var kind = kindOf(asset);
+        var failText = r.status + " " + (r.headers.Status ? String(r.headers.Status).replace(/^\d+\s*/, "") : "Error");
+        var html;
+
+        if (r.status === 500) {
+            var d = r.diagnosis || {};
+            html = "<!doctype html><html><body style='margin:0;font-family:Arial'>" +
+                "<div style='background:#2a2a2a;color:#fff;padding:14px 18px'>" +
+                "<div style='font-size:12px;opacity:.7'>Server Error (500)</div>" +
+                "<div style='font-size:18px;font-weight:700'>" + esc(d.error || "TemplateSyntaxError") + "</div></div>" +
+                "<div style='padding:14px 18px;font-size:13px;color:#333'>" + esc(d.cause || r.hint) + "</div></body></html>";
+        } else {
+            html = demoPage(kind, asset, r.ok, esc(failText));
+        }
+
+        var heights = { css: 290, js: 260, image: 230 };
+        previewContent.innerHTML = "";
+        var frame = document.createElement("iframe");
+        frame.setAttribute("sandbox", "allow-scripts");        // runs isolated, cannot touch this page
+        frame.setAttribute("title", "Simulated browser output");
+        frame.style.cssText = "width:100%;height:" + (r.status === 500 ? 150 : heights[kind]) +
+            "px;border:1px solid #dce3eb;border-radius:5px;background:#fff";
+        frame.srcdoc = html;
+        previewContent.appendChild(frame);
+
+        var cap = document.createElement("p");
+        cap.className = "muted";
+        cap.style.cssText = "margin:8px 0 0;font-size:13px";
+        cap.textContent = r.ok
+            ? "Rendered output · " + r.status + " OK · " + r.mime_type + " · " + r.size
+            : "Rendered output · " + failText + " · " + r.hint;
+        previewContent.appendChild(cap);
     }
 
     function showProblem(message) {
